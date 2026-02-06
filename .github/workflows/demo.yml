@@ -1,0 +1,39 @@
+name: Run tests on staging
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  hello-world:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+
+      # Checkout the repository using the generated token to ensure we have permission to push
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Create hash file
+        run: |
+          # Configure git to use the bot's identity or a generic one
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # Create a change
+          date > report.txt
+          
+          # Stage and commit
+          git add report.txt
+          git commit -m "chore: automated report update [skip ci]"
+          
+          # Push back to the repository
+          # We use HEAD:branch_name to ensure we push to the correct branch even if detached
+          git push origin HEAD:${{ github.ref_name }}
