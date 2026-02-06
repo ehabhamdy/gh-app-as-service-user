@@ -14,26 +14,31 @@ jobs:
         with:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
+          owner: ehabhamdy
+          repositories: pricescout-agent
 
-      # Checkout the repository using the generated token to ensure we have permission to push
-      - name: Checkout
+      # Checkout the EXTERNAL repository using the generated token
+      - name: Checkout pricescout-agent
         uses: actions/checkout@v4
         with:
+          repository: ehabhamdy/pricescout-agent
           token: ${{ steps.app-token.outputs.token }}
+          path: pricescout-agent
 
-      - name: Create hash file
+      - name: Create hash file in external repo
         run: |
-          # Configure git to use the bot's identity or a generic one
+          cd pricescout-agent
+          
+          # Configure git to use the bot's identity
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
           # Create a change
-          date > report.txt
+          echo "Run performed at $(date)" > report.txt
           
           # Stage and commit
           git add report.txt
           git commit -m "chore: automated report update [skip ci]"
           
           # Push back to the repository
-          # We use HEAD:branch_name to ensure we push to the correct branch even if detached
-          git push origin HEAD:${{ github.ref_name }}
+          git push origin HEAD:main
